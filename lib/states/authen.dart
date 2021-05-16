@@ -1,6 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:unglazada/models/user_model.dart';
+import 'package:unglazada/utility/checkType.dart';
 import 'package:unglazada/utility/dialog.dart';
 import 'package:unglazada/utility/my_constant.dart';
+import 'package:unglazada/utility/my_style.dart';
 import 'package:unglazada/widgets/show_image.dart';
 import 'package:unglazada/widgets/show_title.dart';
 
@@ -46,21 +52,37 @@ class _AuthenState extends State<Authen> {
     );
   }
 
+  Future<Null> checkAuthen() async {
+    await Firebase.initializeApp().then((value) async {
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password)
+          .then((value) async {
+        await FirebaseFirestore.instance
+            .collection('user')
+            .doc(value.user.uid)
+            .snapshots()
+            .listen((event) {
+          UserModel model = UserModel.fromMap(event.data());
+          Navigator.pushNamedAndRemoveUntil(
+              context, CheckType(userModel: model).byUser(), (route) => false);
+        });
+      }).catchError((onError) =>
+              normalDialog(context, onError.code, onError.message));
+    });
+  }
+
   Container buildLogin() {
     return Container(
       margin: EdgeInsets.only(top: 16),
       width: size * 0.6,
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          primary: MyConstant.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
+        style: MyStyle().myButtonStyle(),
         onPressed: () {
           if ((email?.isEmpty ?? true) || (password?.isEmpty ?? true)) {
             normalDialog(context, 'มีช่องว่าง !!!', 'กรุณากรอกทุกช่อง คะ ');
-          } else {}
+          } else {
+            checkAuthen();
+          }
         },
         child: Text('Login'),
       ),
