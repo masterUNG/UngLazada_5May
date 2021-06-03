@@ -39,7 +39,7 @@ Future<Null> main() async {
         });
       }
     });
-  });
+  }).catchError((e) => print('###### ${e.toString()}'));
 }
 
 class MyApp extends StatelessWidget {
@@ -51,7 +51,6 @@ class MyApp extends StatelessWidget {
       title: 'Ung Lazada',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
-        
       ),
     );
   }
